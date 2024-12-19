@@ -6,6 +6,8 @@ import { CqrsModule } from '@nestjs/cqrs';
 import { ClubUpdatedHandler } from './domain/handlers/club-updated.handler';
 import { GetAvailabilityHandler } from './domain/handlers/get-availability.handler';
 import { ALQUILA_TU_CANCHA_CLIENT } from './domain/ports/aquila-tu-cancha.client';
+import { InMemoryCacheService } from './infrastructure/cache/in-memory-cache.service';
+import { ClubIdToPlaceIdService } from './infrastructure/cache/club-id-to-place-id.service';
 import { HTTPAlquilaTuCanchaClient } from './infrastructure/clients/http-alquila-tu-cancha.client';
 import { EventsController } from './infrastructure/controllers/events.controller';
 import { SearchController } from './infrastructure/controllers/search.controller';
@@ -14,6 +16,8 @@ import { SearchController } from './infrastructure/controllers/search.controller
   imports: [HttpModule, CqrsModule, ConfigModule.forRoot()],
   controllers: [SearchController, EventsController],
   providers: [
+    InMemoryCacheService,
+    ClubIdToPlaceIdService,
     {
       provide: ALQUILA_TU_CANCHA_CLIENT,
       useClass: HTTPAlquilaTuCanchaClient,

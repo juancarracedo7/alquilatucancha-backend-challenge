@@ -1,6 +1,8 @@
 import * as moment from 'moment';
 
 import { AlquilaTuCanchaClient } from '../../domain/ports/aquila-tu-cancha.client';
+import { ClubIdToPlaceIdService } from '../../infrastructure/cache/club-id-to-place-id.service';
+import { InMemoryCacheService } from '../../infrastructure/cache/in-memory-cache.service';
 import { GetAvailabilityQuery } from '../commands/get-availaiblity.query';
 import { Club } from '../model/club';
 import { Court } from '../model/court';
@@ -10,10 +12,20 @@ import { GetAvailabilityHandler } from './get-availability.handler';
 describe('GetAvailabilityHandler', () => {
   let handler: GetAvailabilityHandler;
   let client: FakeAlquilaTuCanchaClient;
+  let cacheService: InMemoryCacheService;
+  let clubIdToPlaceIdService: ClubIdToPlaceIdService;
 
   beforeEach(() => {
     client = new FakeAlquilaTuCanchaClient();
-    handler = new GetAvailabilityHandler(client);
+    cacheService = new InMemoryCacheService();
+    clubIdToPlaceIdService = new ClubIdToPlaceIdService();
+
+    // Pasar las tres dependencias al constructor
+    handler = new GetAvailabilityHandler(
+      client as AlquilaTuCanchaClient,
+      cacheService,
+      clubIdToPlaceIdService,
+    );
   });
 
   it('returns the availability', async () => {
@@ -42,18 +54,19 @@ class FakeAlquilaTuCanchaClient implements AlquilaTuCanchaClient {
   courts: Record<string, Court[]> = {};
   slots: Record<string, Slot[]> = {};
   async getClubs(placeId: string): Promise<Club[]> {
-    return this.clubs[placeId];
+    return this.clubs[placeId] || [];
   }
   async getCourts(clubId: number): Promise<Court[]> {
-    return this.courts[String(clubId)];
+    return this.courts[String(clubId)] || [];
   }
   async getAvailableSlots(
     clubId: number,
     courtId: number,
     date: Date,
   ): Promise<Slot[]> {
-    return this.slots[
-      `${clubId}_${courtId}_${moment(date).format('YYYY-MM-DD')}`
-    ];
+    return (
+      this.slots[`${clubId}_${courtId}_${moment(date).format('YYYY-MM-DD')}`] ||
+      []
+    );
   }
 }
